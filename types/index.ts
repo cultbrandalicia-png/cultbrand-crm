@@ -1,0 +1,28 @@
+export type Prospecto = {
+  id: number;
+  empresa: string;
+  sector?: string;
+  pais?: string;
+  provincia?: string;
+  localidad?: string;
+  direccion?: string;
+  cp?: string;
+  web?: string;
+  contacto?: string;
+  puesto?: string;
+  telefono?: string;
+  email?: string;
+  linkedin?: string;
+  estado: 'No contactado' | 'M1 enviado' | 'M2 enviado' | 'M3 enviado' | 'Respuesta' | 'Cita agendada' | 'Descartado';
+  m1: boolean;
+  m2: boolean;
+  m3: boolean;
+  respuesta: boolean;
+  fecha_ultimo_toque?: string;
+  fecha_proximo_toque?: string;
+  notas?: string;
+  origen?: string;
+  prioridad?: 'Baja' | 'Media' | 'Alta';
+  user_id?: string;
+  created_at?: string;
+};
