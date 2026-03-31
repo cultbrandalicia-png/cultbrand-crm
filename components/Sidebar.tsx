@@ -14,11 +14,11 @@ const Sidebar = () => {
   ];
 
   return (
-    <div className=\"w-64 h-screen bg-gray-900 text-white fixed left-0 top-0 flex flex-col\">
-      <div className=\"p-6 text-2xl font-bold border-b border-gray-800\">
+    <div className="w-64 h-screen bg-gray-900 text-white fixed left-0 top-0 flex flex-col">
+      <div className="p-6 text-2xl font-bold border-b border-gray-800">
         CULTBRAND CRM
       </div>
-      <nav className=\"flex-1 mt-6\">
+      <nav className="flex-1 mt-6">
         {menuItems.map((item) => (
           <Link
             key={item.path}
@@ -27,12 +27,12 @@ const Sidebar = () => {
               pathname === item.path ? 'bg-gray-800 border-r-4 border-blue-500' : ''
             }`}
           >
-            <span className=\"mr-3\">{item.icon}</span>
+            <span className="mr-3">{item.icon}</span>
             {item.name}
           </Link>
         ))}
       </nav>
-      <div className=\"p-6 border-t border-gray-800 text-gray-500 text-sm\">
+      <div className="p-6 border-t border-gray-800 text-gray-500 text-sm">
         v1.0.0
       </div>
     </div>
