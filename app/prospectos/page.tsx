@@ -27,7 +27,7 @@ export default function ProspectosPage() {
     return matchesSearch && matchesSector;
   });
 
-  const sectores = ['Todos', ...new Set(prospectos.map(p => p.sector).filter(Boolean))] as string[];
+  const sectores = ['Todos', ...Array.from(new Set(prospectos.map(p => p.sector).filter((s): s is string => Boolean(s))))];
 
   if (loading) return <div className="p-8">Cargando prospectos...</div>;
 
@@ -38,75 +38,69 @@ export default function ProspectosPage() {
       </div>
 
       <div className="flex gap-4 mb-6">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+        <div className="flex items-center gap-2 bg-white border rounded-lg px-4 py-2 flex-1">
+          <Search size={18} className="text-gray-400" />
           <input
             type="text"
-            placeholder="Buscar por empresa o contacto..."
-            className="w-full pl-10 pr-4 py-2 border rounded-lg"
+            placeholder="Buscar empresa o contacto..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={e => setSearchTerm(e.target.value)}
+            className="outline-none flex-1"
           />
         </div>
-        <div className="relative">
-          <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+        <div className="flex items-center gap-2 bg-white border rounded-lg px-4 py-2">
+          <Filter size={18} className="text-gray-400" />
           <select
-            className="pl-10 pr-4 py-2 border rounded-lg appearance-none"
             value={sectorFilter}
-            onChange={(e) => setSectorFilter(e.target.value)}
+            onChange={e => setSectorFilter(e.target.value)}
+            className="outline-none"
           >
-            {sectores.map(s => <option key={s} value={s}>{s}</option>)}
+            {sectores.map(s => (
+              <option key={s} value={s}>{s}</option>
+            ))}
           </select>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow overflow-hidden">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 text-gray-500 uppercase text-xs">
+          <thead className="text-gray-500 uppercase text-xs border-b">
             <tr>
-              <th className="px-4 py-3 text-left">Empresa</th>
-              <th className="px-4 py-3 text-left">Contacto</th>
-              <th className="px-4 py-3 text-left">Email</th>
-              <th className="px-4 py-3 text-left">Sector</th>
-              <th className="px-4 py-3 text-left">Fase</th>
-              <th className="px-4 py-3 text-left">Prioridad</th>
-              <th className="px-4 py-3 text-left">Acciones</th>
+              <th className="py-3 text-left px-4">Empresa</th>
+              <th className="py-3 text-left px-4">Contacto</th>
+              <th className="py-3 text-left px-4">Email</th>
+              <th className="py-3 text-left px-4">Sector</th>
+              <th className="py-3 text-left px-4">Fase</th>
+              <th className="py-3 text-left px-4">Prioridad</th>
+              <th className="py-3 text-left px-4">Estado</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-gray-50">
             {filteredProspectos.map(p => (
               <tr key={p.id} className="hover:bg-gray-50">
-                <td className="px-4 py-3 font-medium">{p.nombre_empresa}</td>
-                <td className="px-4 py-3 text-gray-600">{p.persona_contacto}</td>
-                <td className="px-4 py-3 text-gray-600">{p.email}</td>
-                <td className="px-4 py-3 text-gray-600">{p.sector}</td>
-                <td className="px-4 py-3">
-                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    {p.fase}
-                  </span>
+                <td className="py-3 px-4 font-medium">{p.nombre_empresa}</td>
+                <td className="py-3 px-4 text-gray-600">{p.persona_contacto}</td>
+                <td className="py-3 px-4 text-gray-600">{p.email}</td>
+                <td className="py-3 px-4 text-gray-600">{p.sector}</td>
+                <td className="py-3 px-4">
+                  <span className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">{p.fase}</span>
                 </td>
-                <td className="px-4 py-3">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                <td className="py-3 px-4">
+                  <span className={`px-2 py-1 rounded-full text-xs ${
                     p.prioridad === 'Alta' ? 'bg-red-100 text-red-800' :
                     p.prioridad === 'Media' ? 'bg-yellow-100 text-yellow-800' :
                     'bg-green-100 text-green-800'
-                  }`}>
-                    {p.prioridad}
-                  </span>
+                  }`}>{p.prioridad}</span>
                 </td>
-                <td className="px-4 py-3">
-                  <button className="text-gray-400 hover:text-blue-600">
-                    <Edit2 size={16} />
-                  </button>
+                <td className="py-3 px-4">
+                  <span className="px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-800">{p.estado}</span>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
         {filteredProspectos.length === 0 && (
-          <div className="text-center py-12 text-gray-500">
-            No se encontraron prospectos.
-          </div>
+          <div className="p-8 text-center text-gray-500">No se encontraron prospectos</div>
         )}
       </div>
     </div>
