@@ -1,13 +1,8 @@
 'use client';
-
 import { useEffect, useState, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Prospecto } from '@/types';
-import { Search, Filter } from 'lucide-react';
-
-function classNames(...classes: (string | false | null | undefined)[]) {
-  return classes.filter(Boolean).join(' ');
-}
+import { Search } from 'lucide-react';
 
 function getPrioridadBadgeClasses(prioridad?: string | null) {
   if (!prioridad) return 'bg-gray-100 text-gray-800';
@@ -44,12 +39,12 @@ export default function ProspectosPage() {
   }, []);
 
   const sectores = useMemo(
-    () => ['Todos', ...Array.from(new Set(prospectos.map((p) => p.sector).filter((s): s is string => Boolean(s))))],
+    () => ['Todos', ...Array.from(new Set((prospectos.map((p) => p.sector).filter(Boolean) as string[])))],
     [prospectos]
   );
 
   const estados = useMemo(
-    () => ['Todos', ...Array.from(new Set(prospectos.map((p) => p.estado).filter((s): s is string => Boolean(s))))],
+    () => ['Todos', ...Array.from(new Set((prospectos.map((p) => p.estado).filter(Boolean) as string[])))],
     [prospectos]
   );
 
@@ -86,104 +81,74 @@ export default function ProspectosPage() {
           </div>
         </header>
 
-        <section className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-wrap gap-3">
-            <div className="flex items-center gap-2 bg-white border border-gray-300 rounded-lg px-3 py-2 shadow-sm">
-              <Filter size={16} className="text-gray-400" />
-              <select
-                value={sectorFilter}
-                onChange={(e) => setSectorFilter(e.target.value)}
-                className="text-sm text-gray-700 outline-none bg-transparent"
-              >
-                {sectores.map((s) => (
-                  <option key={s} value={s}>{s === 'Todos' ? 'Todos los sectores' : s}</option>
-                ))}
-              </select>
-            </div>
-            <div className="flex items-center gap-2 bg-white border border-gray-300 rounded-lg px-3 py-2 shadow-sm">
-              <Filter size={16} className="text-gray-400" />
-              <select
-                value={estadoFilter}
-                onChange={(e) => setEstadoFilter(e.target.value)}
-                className="text-sm text-gray-700 outline-none bg-transparent"
-              >
-                {estados.map((s) => (
-                  <option key={s} value={s}>{s === 'Todos' ? 'Todos los estados' : s}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 bg-white border border-gray-300 rounded-lg px-3 py-2 shadow-sm">
-            <Search size={16} className="text-gray-400" />
+        {/* Filtros */}
+        <div className="flex flex-col sm:flex-row gap-3 mb-6">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input
               type="text"
               placeholder="Buscar empresa o contacto..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="text-sm text-gray-700 outline-none w-56"
+              className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-        </section>
+          <select
+            value={sectorFilter}
+            onChange={(e) => setSectorFilter(e.target.value)}
+            className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+          >
+            {sectores.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+          <select
+            value={estadoFilter}
+            onChange={(e) => setEstadoFilter(e.target.value)}
+            className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+          >
+            {estados.map((e) => <option key={e} value={e}>{e}</option>)}
+          </select>
+        </div>
 
-        <section className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        {/* Tabla */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <thead className="bg-gray-50 text-xs uppercase text-gray-500 border-b">
-                <tr>
-                  <th className="py-3 px-4 text-left">Empresa</th>
-                  <th className="py-3 px-4 text-left">Contacto</th>
-                  <th className="py-3 px-4 text-left">Email</th>
-                  <th className="py-3 px-4 text-left">Sector</th>
-                  <th className="py-3 px-4 text-left">Capa</th>
-                  <th className="py-3 px-4 text-left">Rating</th>
-                  <th className="py-3 px-4 text-left">Facturacion</th>
-                  <th className="py-3 px-4 text-left">BTC</th>
-                  <th className="py-3 px-4 text-left">Fase</th>
-                  <th className="py-3 px-4 text-left">Prioridad</th>
-                  <th className="py-3 px-4 text-left">Estado</th>
-                  <th className="py-3 px-4 text-left">M1</th>
-                  <th className="py-3 px-4 text-left">M2</th>
-                  <th className="py-3 px-4 text-left">M3</th>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-xs text-gray-400 uppercase border-b border-gray-100 bg-gray-50">
+                  <th className="px-6 py-3 text-left font-medium">Empresa</th>
+                  <th className="px-6 py-3 text-left font-medium">Contacto</th>
+                  <th className="px-6 py-3 text-left font-medium">Sector</th>
+                  <th className="px-6 py-3 text-left font-medium">Estado</th>
+                  <th className="px-6 py-3 text-left font-medium">Fase</th>
+                  <th className="px-6 py-3 text-left font-medium">Prioridad</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
-                {filteredProspectos.length === 0 && (
-                  <tr>
-                    <td colSpan={14} className="py-6 px-4 text-center text-sm text-gray-500">
-                      No se encontraron prospectos.
-                    </td>
-                  </tr>
-                )}
+              <tbody className="divide-y divide-gray-50">
                 {filteredProspectos.map((p) => (
-                  <tr key={p.id} className="hover:bg-gray-50">
-                    <td className="py-3 px-4 font-medium text-gray-900">{p.nombre_empresa}</td>
-                    <td className="py-3 px-4 text-gray-600">{p.persona_contacto || '—'}</td>
-                    <td className="py-3 px-4 text-gray-600">{p.email || '—'}</td>
-                    <td className="py-3 px-4 text-gray-600">{p.sector || '—'}</td>
-                    <td className="py-3 px-4 text-gray-600">{(p as any).capa || '—'}</td>
-                    <td className="py-3 px-4 text-gray-600">{(p as any).rating || '—'}</td>
-                    <td className="py-3 px-4 text-gray-600">{(p as any).facturacion || '—'}</td>
-                    <td className="py-3 px-4 text-gray-600">{(p as any).btc || '—'}</td>
-                    <td className="py-3 px-4 text-gray-600">{p.fase || '—'}</td>
-                    <td className="py-3 px-4">
-                      <span className={classNames('inline-flex px-2 py-1 rounded-full text-xs font-medium', getPrioridadBadgeClasses(p.prioridad))}>
-                        {p.prioridad || '—'}
+                  <tr key={p.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-3 font-medium text-gray-900">{p.nombre_empresa}</td>
+                    <td className="px-6 py-3 text-gray-500">{p.persona_contacto || '-'}</td>
+                    <td className="px-6 py-3 text-gray-500">{p.sector || '-'}</td>
+                    <td className="px-6 py-3">
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getEstadoBadgeClasses(p.estado)}`}>
+                        {p.estado || '-'}
                       </span>
                     </td>
-                    <td className="py-3 px-4">
-                      <span className={classNames('inline-flex px-2 py-1 rounded-full text-xs font-medium', getEstadoBadgeClasses(p.estado))}>
-                        {p.estado || '—'}
+                    <td className="px-6 py-3 text-gray-500">{p.fase || '-'}</td>
+                    <td className="px-6 py-3">
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getPrioridadBadgeClasses(p.prioridad)}`}>
+                        {p.prioridad || '-'}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-gray-600">{(p as any).m1 || '—'}</td>
-                    <td className="py-3 px-4 text-gray-600">{(p as any).m2 || '—'}</td>
-                    <td className="py-3 px-4 text-gray-600">{(p as any).m3 || '—'}</td>
                   </tr>
                 ))}
+                {filteredProspectos.length === 0 && (
+                  <tr><td colSpan={6} className="px-6 py-8 text-center text-gray-400 text-xs">Sin resultados</td></tr>
+                )}
               </tbody>
             </table>
           </div>
-        </section>
+        </div>
       </div>
     </main>
   );
