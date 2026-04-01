@@ -6,19 +6,19 @@ import Link from 'next/link';
 
 const FASES = ['No contactado','M1 enviado','M2 enviado','M3 enviado','Respuesta','Cita agendada','Descartado'];
 
-function getPrioridadColor(p?: string | null) {
-  if (p === 'Alta') return 'bg-red-100 text-red-700';
-  if (p === 'Media') return 'bg-yellow-100 text-yellow-700';
-  return 'bg-green-100 text-green-700';
+function getPrioridadBadge(p?: string | null) {
+  if (p === 'Alta') return 'bg-red-100 text-red-700 border border-red-200';
+  if (p === 'Media') return 'bg-amber-100 text-amber-700 border border-amber-200';
+  return 'bg-emerald-100 text-emerald-700 border border-emerald-200';
 }
 
-function getFaseColor(f?: string | null) {
-  if (!f) return 'bg-gray-100 text-gray-600';
-  if (f === 'Cita agendada') return 'bg-blue-100 text-blue-700';
-  if (f === 'Descartado') return 'bg-red-100 text-red-700';
-  if (f.toLowerCase().includes('enviado')) return 'bg-yellow-100 text-yellow-700';
-  if (f === 'Respuesta') return 'bg-emerald-100 text-emerald-700';
-  return 'bg-gray-100 text-gray-600';
+function getFaseBadge(f?: string | null) {
+  if (!f) return 'bg-gray-100 text-gray-500 border border-gray-200';
+  if (f === 'Cita agendada') return 'bg-blue-100 text-blue-700 border border-blue-200';
+  if (f === 'Descartado') return 'bg-red-100 text-red-700 border border-red-200';
+  if (f.toLowerCase().includes('enviado')) return 'bg-amber-100 text-amber-700 border border-amber-200';
+  if (f === 'Respuesta') return 'bg-emerald-100 text-emerald-700 border border-emerald-200';
+  return 'bg-gray-100 text-gray-500 border border-gray-200';
 }
 
 export default function Dashboard() {
@@ -35,10 +35,10 @@ export default function Dashboard() {
   }, []);
 
   const stats = useMemo(() => [
-    { label: 'Total empresas', value: prospectos.length, color: 'bg-blue-600' },
-    { label: 'Citas agendadas', value: prospectos.filter(p => p.estado === 'Cita agendada').length, color: 'bg-emerald-600' },
-    { label: 'En outreach', value: prospectos.filter(p => p.estado && p.estado.toLowerCase().includes('enviado')).length, color: 'bg-yellow-500' },
-    { label: 'Descartados', value: prospectos.filter(p => p.estado === 'Descartado').length, color: 'bg-red-500' },
+    { label: 'Total empresas', value: prospectos.length, icon: '\uD83C\uDFE2', color: 'from-blue-500 to-blue-600', light: 'bg-blue-50 text-blue-600' },
+    { label: 'Citas agendadas', value: prospectos.filter(p => p.estado === 'Cita agendada').length, icon: '\uD83D\uDCC5', color: 'from-emerald-500 to-emerald-600', light: 'bg-emerald-50 text-emerald-600' },
+    { label: 'En outreach', value: prospectos.filter(p => p.estado && p.estado.toLowerCase().includes('enviado')).length, icon: '\uD83D\uDCE4', color: 'from-amber-500 to-amber-600', light: 'bg-amber-50 text-amber-600' },
+    { label: 'Descartados', value: prospectos.filter(p => p.estado === 'Descartado').length, icon: '\u274C', color: 'from-red-500 to-red-600', light: 'bg-red-50 text-red-600' },
   ], [prospectos]);
 
   const porSector = useMemo(() => {
@@ -55,124 +55,150 @@ export default function Dashboard() {
   }, [prospectos]);
 
   const top10 = useMemo(() => {
-    return prospectos
-      .filter(p => p.prioridad === 'Alta')
-      .slice(0, 10);
+    return prospectos.filter(p => p.prioridad === 'Alta').slice(0, 10);
   }, [prospectos]);
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <div className="text-gray-400 text-sm">Cargando dashboard...</div>
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-gray-500 text-sm font-medium">Cargando dashboard...</p>
+        </div>
       </div>
     );
   }
 
+  const total = prospectos.length;
+
   return (
-    <div className="bg-gray-50 min-h-screen">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <div className="p-6 space-y-6 bg-gray-50 min-h-screen">
 
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">Dashboard</h1>
-          <p className="mt-1 text-sm text-gray-500">{prospectos.length} empresas en el CRM</p>
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-sm text-gray-500 mt-0.5">{total} empresas en el CRM</p>
         </div>
+        <Link
+          href="/prospectos"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          Ver todos
+        </Link>
+      </div>
 
-        {/* KPI Cards */}
-        <section className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-          {stats.map((s) => (
-            <div key={s.label} className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col gap-2">
-              <div className={`w-2 h-2 rounded-full ${s.color}`} />
-              <div className="text-3xl font-bold text-gray-900">{s.value}</div>
-              <div className="text-xs text-gray-500 uppercase tracking-wide font-medium">{s.label}</div>
+      {/* KPI Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {stats.map((s) => (
+          <div key={s.label} className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 flex items-center gap-4">
+            <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl ${s.light}`}>
+              {s.icon}
             </div>
-          ))}
-        </section>
+            <div>
+              <p className="text-2xl font-bold text-gray-900">{s.value}</p>
+              <p className="text-xs text-gray-500 mt-0.5">{s.label}</p>
+            </div>
+          </div>
+        ))}
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+      {/* Two column row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-          {/* Pipeline por fase */}
-          <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <h2 className="text-base font-semibold text-gray-800 mb-4">Pipeline de outreach</h2>
-            <div className="space-y-3">
-              {porFase.map(({ fase, total }) => {
-                const pct = prospectos.length > 0 ? Math.round((total / prospectos.length) * 100) : 0;
-                return (
-                  <div key={fase}>
-                    <div className="flex justify-between text-xs text-gray-600 mb-1">
-                      <span className="font-medium">{fase}</span>
-                      <span>{total} ({pct}%)</span>
-                    </div>
-                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                      <div
-                        className="h-2 bg-blue-500 rounded-full transition-all"
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
+        {/* Pipeline por fase */}
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+          <h2 className="text-base font-semibold text-gray-900 mb-4">Pipeline de outreach</h2>
+          <div className="space-y-3">
+            {porFase.map(({ fase, total: t }) => {
+              const pct = total > 0 ? Math.round((t / total) * 100) : 0;
+              return (
+                <div key={fase}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm text-gray-700">{fase}</span>
+                    <span className="text-sm font-semibold text-gray-900">{t} <span className="font-normal text-gray-400">({pct}%)</span></span>
                   </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Por sector */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <h2 className="text-base font-semibold text-gray-800 mb-4">Por sector</h2>
-            <div className="space-y-2">
-              {porSector.map(([sector, count]) => (
-                <div key={sector} className="flex items-center justify-between">
-                  <span className="text-sm text-gray-700 truncate max-w-[140px]">{sector}</span>
-                  <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">{count}</span>
+                  <div className="w-full bg-gray-100 rounded-full h-2">
+                    <div
+                      className="bg-blue-500 h-2 rounded-full transition-all duration-500"
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
                 </div>
-              ))}
-              {porSector.length === 0 && <p className="text-xs text-gray-400">Sin datos de sector</p>}
-            </div>
+              );
+            })}
           </div>
         </div>
 
-        {/* Top 10 mayor prioridad */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base font-semibold text-gray-800">Top 10 · Mayor prioridad</h2>
-            <Link href="/prospectos" className="text-xs text-blue-600 hover:underline">Ver todos</Link>
+        {/* Por sector */}
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+          <h2 className="text-base font-semibold text-gray-900 mb-4">Por sector</h2>
+          <div className="space-y-3">
+            {porSector.length === 0 && <p className="text-sm text-gray-400">Sin datos de sector</p>}
+            {porSector.map(([sector, count]) => {
+              const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+              return (
+                <div key={sector}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm text-gray-700">{sector}</span>
+                    <span className="text-sm font-semibold text-gray-900">{count} <span className="font-normal text-gray-400">({pct}%)</span></span>
+                  </div>
+                  <div className="w-full bg-gray-100 rounded-full h-2">
+                    <div
+                      className="bg-emerald-500 h-2 rounded-full transition-all duration-500"
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-xs text-gray-400 uppercase border-b border-gray-100">
-                  <th className="pb-3 text-left font-medium">Empresa</th>
-                  <th className="pb-3 text-left font-medium">Contacto</th>
-                  <th className="pb-3 text-left font-medium">Sector</th>
-                  <th className="pb-3 text-left font-medium">Fase</th>
-                  <th className="pb-3 text-left font-medium">Prioridad</th>
+        </div>
+      </div>
+
+      {/* Top 10 mayor prioridad */}
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <h2 className="text-base font-semibold text-gray-900">Top 10 &middot; Mayor prioridad</h2>
+          <Link href="/prospectos" className="text-sm text-blue-600 hover:text-blue-700 font-medium">Ver todos</Link>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left font-medium">Empresa</th>
+                <th className="px-6 py-3 text-left font-medium">Contacto</th>
+                <th className="px-6 py-3 text-left font-medium">Sector</th>
+                <th className="px-6 py-3 text-left font-medium">Fase</th>
+                <th className="px-6 py-3 text-left font-medium">Prioridad</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {top10.map((p) => (
+                <tr key={p.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-6 py-3.5 font-medium text-gray-900">{p.nombre_empresa}</td>
+                  <td className="px-6 py-3.5 text-gray-600">{p.persona_contacto || '-'}</td>
+                  <td className="px-6 py-3.5 text-gray-600">{p.sector || '-'}</td>
+                  <td className="px-6 py-3.5">
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getFaseBadge(p.fase || p.estado)}`}>
+                      {p.fase || p.estado || '-'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-3.5">
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getPrioridadBadge(p.prioridad)}`}>
+                      {p.prioridad || '-'}
+                    </span>
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {top10.map((p) => (
-                  <tr key={p.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="py-3 font-medium text-gray-900">{p.nombre_empresa}</td>
-                    <td className="py-3 text-gray-500">{p.persona_contacto || '-'}</td>
-                    <td className="py-3 text-gray-500">{p.sector || '-'}</td>
-                    <td className="py-3">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getFaseColor(p.fase || p.estado)}`}>
-                        {p.fase || p.estado || '-'}
-                      </span>
-                    </td>
-                    <td className="py-3">
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getPrioridadColor(p.prioridad)}`}>
-                        {p.prioridad || '-'}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-                {top10.length === 0 && (
-                  <tr><td colSpan={5} className="py-6 text-center text-gray-400 text-xs">Sin prospectos de alta prioridad</td></tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+              ))}
+              {top10.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-6 py-8 text-center text-gray-400 text-sm">No hay empresas de alta prioridad</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
-
       </div>
     </div>
   );
