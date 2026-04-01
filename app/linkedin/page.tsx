@@ -21,7 +21,7 @@ export default function LinkedInPage() {
   useEffect(() => {
     const fetchData = async () => {
       const { data, error } = await supabase
-        .from('prospectos')
+        .from()
         .select('*')
         .order('nombre_empresa', { ascending: true });
       if (!error && data) setProspectos(data);
@@ -39,8 +39,8 @@ export default function LinkedInPage() {
     return prospectos.filter((p) => {
       const matchSearch =
         !search ||
-        p.nombre_empresa.toLowerCase().includes(search.toLowerCase()) ||
-        (p.persona_contacto && p.persona_contacto.toLowerCase().includes(search.toLowerCase()));
+        p.empresa.toLowerCase().includes(search.toLowerCase()) ||
+        (p.contacto && p.contacto.toLowerCase().includes(search.toLowerCase()));
       const matchEstado = estadoFilter === 'Todos' || p.estado === estadoFilter;
       return matchSearch && matchEstado;
     });
@@ -137,8 +137,8 @@ export default function LinkedInPage() {
               <tbody className="divide-y divide-gray-50">
                 {filtrados.map((p) => (
                   <tr key={p.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-3 font-medium text-gray-900">{p.nombre_empresa}</td>
-                    <td className="px-6 py-3 text-gray-500">{p.persona_contacto || '-'}</td>
+                    <td className="px-6 py-3 font-medium text-gray-900">{p.empresa}</td>
+                    <td className="px-6 py-3 text-gray-500">{p.contacto || '-'}</td>
                     <td className="px-6 py-3">
                       {(p as any).linkedin_url ? (
                         <a href={(p as any).linkedin_url} target="_blank" rel="noopener noreferrer"
