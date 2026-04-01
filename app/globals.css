@@ -1,3 +1,4 @@
+/* Tailwind CSS v3 */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -10,5 +11,5 @@
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: white;
+  background: #f9fafb;
 }
