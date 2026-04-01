@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Prospecto } from '@/types';
 import Link from 'next/link';
@@ -16,7 +16,7 @@ function getFaseBadge(f?: string | null) {
   if (!f) return 'bg-gray-100 text-gray-500 border border-gray-200';
   if (f === 'Cita agendada') return 'bg-blue-100 text-blue-700 border border-blue-200';
   if (f === 'Descartado') return 'bg-red-100 text-red-700 border border-red-200';
-  if (f.toLowerCase().includes('enviado')) return 'bg-amber-100 text-amber-700 border border-amber-200';
+  if (f.toLowerCase().includes('enviado')) return 'bg-amber-100 text-amber-700 border border-amber-700';
   if (f === 'Respuesta') return 'bg-emerald-100 text-emerald-700 border border-emerald-200';
   return 'bg-gray-100 text-gray-500 border border-gray-200';
 }
@@ -27,36 +27,42 @@ export default function Dashboard() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const { data, error } = await supabase.from('prospectos').select('*');
+      const { data, error } = await supabase.from('prospectos_mix').select('+');
       if (!error && data) setProspectos(data);
       setLoading(false);
     };
     fetchData();
   }, []);
 
-  const stats = useMemo(() => [
-    { label: 'Total empresas', value: prospectos.length, icon: '\uD83C\uDFE2', color: 'from-blue-500 to-blue-600', light: 'bg-blue-50 text-blue-600' },
-    { label: 'Citas agendadas', value: prospectos.filter(p => p.estado === 'Cita agendada').length, icon: '\uD83D\uDCC5', color: 'from-emerald-500 to-emerald-600', light: 'bg-emerald-50 text-emerald-600' },
-    { label: 'En outreach', value: prospectos.filter(p => p.estado && p.estado.toLowerCase().includes('enviado')).length, icon: '\uD83D\uDCE4', color: 'from-amber-500 to-amber-600', light: 'bg-amber-50 text-amber-600' },
-    { label: 'Descartados', value: prospectos.filter(p => p.estado === 'Descartado').length, icon: '\u274C', color: 'from-red-500 to-red-600', light: 'bg-red-50 text-red-600' },
-  ], [prospectos]);
+  const stats = (() => {
+    return {
+      total: { label: 'Total empresas', value: prospectos.length, icon: '\uD83C\uDFE2', color: 'from-blue-500 to-blue-600', light: 'bg-blue-50 text-blue-600' },
+      citas: { label: 'Citas agendadas', value: prospectos.filter(p => p.estado === 'Cita agendada').length, icon: '\uD83D\uDCC5', color: 'from-emerald-500 to-emerald-600', light: 'bg-emerald-50 text-emerald-600' },
+      enOutreach: { label: 'En outreach', value: prospectos.filter(p => p.estado && p.estado.toLowerCase().includes('enviado')).length, icon: '\uD83D\uDCE4', color: 'from-orange-500 to-orange-600', light: 'bg-orange-50 text-orange-600' },
+      descartados: { label: 'Descartados', value: prospectos.filter(p => p.estado === 'Descartado').length, icon: '\u274C', color: 'from-red-500 to-red-600', light: 'bg-red-50 text-red-600' }
+    };
+  })();
 
-  const porSector = useMemo(() => {
+  const porSector = (() => {
     const map: Record<string, number> = {};
-    prospectos.forEach(p => { if (p.sector) map[p.sector] = (map[p.sector] || 0) + 1; });
+    prospectos.forEach(p => {
+      if (p.sector) map[p.sector] = (map[p.sector] || 0) + 1;
+    });
     return Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 6);
-  }, [prospectos]);
+  })();
 
-  const porFase = useMemo(() => {
+  const porFase = (() => {
     return FASES.map(fase => ({
       fase,
       total: prospectos.filter(p => p.estado === fase).length,
     }));
-  }, [prospectos]);
+  })();
 
-  const top10 = useMemo(() => {
+  const top10 = (() => {
     return prospectos.filter(p => p.prioridad === 'Alta').slice(0, 10);
-  }, [prospectos]);
+  })();
+
+  const total = prospectos.length;
 
   if (loading) {
     return (
@@ -69,11 +75,8 @@ export default function Dashboard() {
     );
   }
 
-  const total = prospectos.length;
-
   return (
     <div className="p-6 space-y-6 bg-gray-50 min-h-screen">
-
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -90,39 +93,38 @@ export default function Dashboard() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((s) => (
-          <div key={s.label} className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 flex items-center gap-4">
+        {Object.values(stats).map((s, i) => (
+          <div key={i} className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 flex items-center gap-4">
             <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-xl ${s.light}`}>
-              {s.icon}
+              {s.label}
             </div>
             <div>
               <p className="text-2xl font-bold text-gray-900">{s.value}</p>
-              <p className="text-xs text-gray-500 mt-0.5">{s.label}</p>
+              <p className="text-sm text-gray-500 mt-0.5">{s.label}</p>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Two column row */}
+      {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-        {/* Pipeline por fase */}
+        {/* Por Sector */}
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-          <h2 className="text-base font-semibold text-gray-900 mb-4">Pipeline de outreach</h2>
+          <h2 className="text-lg font-bold text-gray-900 mb-4">Por Sector</h2>
           <div className="space-y-3">
-            {porFase.map(({ fase, total: t }) => {
-              const pct = total > 0 ? Math.round((t / total) * 100) : 0;
+            {porSector.map(([sector, count]) => {
+              const pct = ((count / total) * 100).toFixed(0);
               return (
-                <div key={fase}>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm text-gray-700">{fase}</span>
-                    <span className="text-sm font-semibold text-gray-900">{t} <span className="font-normal text-gray-400">({pct}%)</span></span>
+                <div key={sector}>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="font-medium text-gray-700">{sector}</span>
+                    <span className="text-gray-500">{count}</span>
                   </div>
-                  <div className="w-full bg-gray-100 rounded-full h-2">
+                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                     <div
-                      className="bg-blue-500 h-2 rounded-full transition-all duration-500"
+                      className="h-full bg-gradient-to-r from-blue-500 to-blue-600"
                       style={{ width: `${pct}%` }}
-                    />
+                    ></div>
                   </div>
                 </div>
               );
@@ -130,24 +132,23 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Por sector */}
+        {/* Por Fase */}
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-          <h2 className="text-base font-semibold text-gray-900 mb-4">Por sector</h2>
+          <h2 className="text-lg font-bold text-gray-900 mb-4">Por Fase</h2>
           <div className="space-y-3">
-            {porSector.length === 0 && <p className="text-sm text-gray-400">Sin datos de sector</p>}
-            {porSector.map(([sector, count]) => {
-              const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+            {porFase.map(({ fase, total: count }) => {
+              const pct = ((count / total) * 100).toFixed(0);
               return (
-                <div key={sector}>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm text-gray-700">{sector}</span>
-                    <span className="text-sm font-semibold text-gray-900">{count} <span className="font-normal text-gray-400">({pct}%)</span></span>
+                <div key={fase}>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="font-medium text-gray-700">{fase}</span>
+                    <span className="text-gray-500">{count}</span>
                   </div>
-                  <div className="w-full bg-gray-100 rounded-full h-2">
+                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                     <div
-                      className="bg-emerald-500 h-2 rounded-full transition-all duration-500"
+                      className="h-full bg-gradient-to-r from-emerald-500 to-emerald-600"
                       style={{ width: `${pct}%` }}
-                    />
+                    ></div>
                   </div>
                 </div>
               );
@@ -156,46 +157,40 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Top 10 mayor prioridad */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h2 className="text-base font-semibold text-gray-900">Top 10 &middot; Mayor prioridad</h2>
-          <Link href="/prospectos" className="text-sm text-blue-600 hover:text-blue-700 font-medium">Ver todos</Link>
-        </div>
+      {/* Top 10 Priority */}
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+        <h2 className="text-lg font-bold text-gray-900 mb-4">Top 10 Prioridad Alta</h2>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full">
             <thead>
-              <tr className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wider">
-                <th className="px-6 py-3 text-left font-medium">Empresa</th>
-                <th className="px-6 py-3 text-left font-medium">Contacto</th>
-                <th className="px-6 py-3 text-left font-medium">Sector</th>
-                <th className="px-6 py-3 text-left font-medium">Fase</th>
-                <th className="px-6 py-3 text-left font-medium">Prioridad</th>
+              <tr className="border-b border-gray-200">
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Empresa</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Sector</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Estado</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Prioridad</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
-              {top10.map((p) => (
-                <tr key={p.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-3.5 font-medium text-gray-900">{p.nombre_empresa}</td>
-                  <td className="px-6 py-3.5 text-gray-600">{p.persona_contacto || '-'}</td>
-                  <td className="px-6 py-3.5 text-gray-600">{p.sector || '-'}</td>
-                  <td className="px-6 py-3.5">
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getFaseBadge(p.fase || p.estado)}`}>
-                      {p.fase || p.estado || '-'}
+            <tbody>
+              {top10.map((p, idx) => (
+                <tr key={p.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                  <td className="py-3 px-4">
+                    <Link href={`/prospectos/${p.id}`} className="text-sm font-medium text-blue-600 hover:text-blue-700">
+                      {p.nombre}
+                    </Link>
+                  </td>
+                  <td className="py-3 px-4 text-sm text-gray-600">{p.sector}</td>
+                  <td className="py-3 px-4">
+                    <span className={`inline-block px-2 py-1 text-xs font-medium rounded ${getFaseBadge(p.estado)}`}>
+                      {p.estado || 'Sin estado'}
                     </span>
                   </td>
-                  <td className="px-6 py-3.5">
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getPrioridadBadge(p.prioridad)}`}>
-                      {p.prioridad || '-'}
+                  <td className="py-3 px-4">
+                    <span className={`inline-block px-2 py-1 text-xs font-medium rounded ${getPrioridadBadge(p.prioridad)}`}>
+                      {p.prioridad}
                     </span>
                   </td>
                 </tr>
               ))}
-              {top10.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-gray-400 text-sm">No hay empresas de alta prioridad</td>
-                </tr>
-              )}
             </tbody>
           </table>
         </div>
