@@ -21,7 +21,7 @@ export default function LinkedInPage() {
   useEffect(() => {
     const fetchData = async () => {
       const { data, error } = await supabase
-        .from()
+        .from('prospectos_mix')
         .select('*')
         .order('nombre_empresa', { ascending: true });
       if (!error && data) setProspectos(data);
